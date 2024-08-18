@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build && cp dist/index.html dist/404.html",
     "serve": "vite preview",
-    "deploy": "git add dist -f && git subtree push --prefix dist origin gh-pages"
+    "deploy": "git subtree push --prefix dist origin gh-pages"
   },
   "license": "AGPL-3.0-only",
   "devDependencies": {

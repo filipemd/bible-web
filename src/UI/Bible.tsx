@@ -1,12 +1,15 @@
 import type { Component } from 'solid-js';
-import { createEffect, createSignal, onMount, For, Show } from 'solid-js';
+import { createEffect, createSignal, For, Show } from 'solid-js';
 import { Title } from '@solidjs/meta';
 import { useParams, useNavigate, A } from '@solidjs/router';
 
 import { getBibleVerses, getBookSize, getAllBooks } from '../fetch_bible';
 import type { BibleVerseResponse, BibleError, BibleBooksResponse } from "../fetch_bible";
 
+import Copy from './Copy';
+
 import styles from '../styles/Bible.module.scss';
+
 import logo from '../assets/icons/logo.svg';
 
 // Componente para exibir um verso específico
@@ -17,7 +20,8 @@ const Verse: Component<{ number: number; text: string; url?: string; onClick?: (
             <A class={styles.verseNumber} href={href} onClick={() => props.onClick?.(props.number)}>
                 {props.number}
             </A>
-            {"  " + props.text}
+            {"    " + props.text + "    "}
+            <Copy text={props.text}/>
         </p>
     );
 };
