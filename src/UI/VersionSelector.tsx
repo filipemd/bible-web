@@ -16,9 +16,13 @@ interface Language {
     versions: Version[];
 }
 
+let versions: Promise<Language[]>;
 async function versions_index(): Promise<Language[]> {
-    const response = await fetch(`${import.meta.env.BASE_URL}static/bible/json/index.json`);
-    return response.json();
+    if (!versions) {
+        const response = await fetch(`${import.meta.env.BASE_URL}static/bible/json/index.json`);
+        versions = response.json();
+    }
+    return versions;
 }
 
 const VersionSelector: Component = () => {
