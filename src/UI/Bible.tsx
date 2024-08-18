@@ -1,5 +1,5 @@
 import type { Component } from 'solid-js';
-import { createEffect, createSignal, For, Show } from 'solid-js';
+import { createEffect, createSignal, createMemo, For, Show } from 'solid-js';
 import { Title } from '@solidjs/meta';
 import { useParams, useNavigate, A } from '@solidjs/router';
 
@@ -27,32 +27,35 @@ const Verse: Component<{ number: number; text: string; url?: string; onClick?: (
 };
 
 // Componente para exibir os versos de um capítulo específico
+// Componente para exibir os versos de um capítulo específico
 const Verses: Component<{ version: string; book: string; chapter: number; verse: number; onVerseClick: (verse: number) => void; }> = (props) => {
     const [verses, setVerses] = createSignal<BibleVerseResponse>();
 
+    // Carrega os versos quando as dependências mudam (versão, livro, capítulo)
     createEffect(() => {
         (async () => {
-            const fetchedVerses: BibleVerseResponse | BibleError = await getBibleVerses(props.version, props.book, props.chapter);
-            
-            if (!("error" in fetchedVerses))
+            const fetchedVerses = await getBibleVerses(props.version, props.book, props.chapter);
+            if (!("error" in fetchedVerses)) {
                 setVerses(fetchedVerses);
-            else 
-                console.log("Erro em getBibleVerses():", fetchedVerses.error);
+            } else {
+                console.error("Erro em getBibleVerses():", fetchedVerses.error);
+            }
         })();
     });
 
-    const title = <>{verses()?.book} {props.chapter}{props.verse ? `:${props.verse}` : ''} {props.version.toUpperCase()}</>;
+    // Memoização do título para evitar recomputações desnecessárias
+    const title = createMemo(() => `${verses()?.book} ${props.chapter}${props.verse ? `:${props.verse}` : ''} ${props.version.toUpperCase()}`);
 
     return (
         <div id={styles.chapter}>
             <Show when={verses()}>
-                <Title>{title}</Title>
-                <h1>{title}</h1>
+                <Title>{title()}</Title>
+                <h1>{title()}</h1>
                 <Show when={props.verse > 0}>
-                    <Verse text={verses()!.verses[props.verse - 1] || "Verse not found."} number={props.verse} />
+                    <Verse text={verses()!.verses[props.verse - 1] || "Verso não encontrado."} number={props.verse} />
                 </Show>
                 <Show when={props.verse === 0}>
-                    <For each={verses()!.verses} fallback={<p>No verses found.</p>}>
+                    <For each={verses()!.verses} fallback={<p>Nenhum verso encontrado.</p>}>
                         {(text: string, index: () => number) => (
                             <Verse number={index() + 1} text={text} url={`${import.meta.env.BASE_URL}${props.version}/${props.book}/${props.chapter}/`} onClick={props.onVerseClick}/>
                         )}
@@ -172,7 +175,7 @@ const Bible: Component = () => {
     createEffect(() => {
         if (book() !== '')
             navigate(`${import.meta.env.BASE_URL}${version()}/${book()}/${chapter()}/${verse() || ''}`);
-    });
+    }, [book, chapter, verse]);
 
     function onchange(updatedBook?: string, updatedChapter?: number) {
         if (updatedBook && updatedBook !== book()) {
