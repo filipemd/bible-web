@@ -5,13 +5,7 @@ import styles from '../styles/Copy.module.scss'
 
 const Copy: Component<{ text: string }> = (props) => {
   function copy() {
-    navigator.clipboard.writeText(props.text)
-      .then(() => {
-        alert('Text copied to clipboard.');
-      })
-      .catch(() => {
-        alert('Failed to copy text.');
-      });
+    navigator.clipboard.writeText(props.text);
   }
 
   return (
