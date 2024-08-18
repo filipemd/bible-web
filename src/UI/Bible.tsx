@@ -16,7 +16,7 @@ import logo from '../assets/icons/logo.svg';
 const Verse: Component<{ number: number; text: string; url?: string; onClick?: (verse: number) => void; }> = (props) => {
     const href = props.url ? `${props.url}${props.number}` : `#${props.number}`;
     return (
-        <p class="verse">
+        <p>
             <A class={styles.verseNumber} href={href} onClick={() => props.onClick?.(props.number)}>
                 {props.number}
             </A>
