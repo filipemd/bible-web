@@ -139,55 +139,58 @@ const Bible: Component = () => {
     const navigate = useNavigate();
 
     const [version] = createSignal<string>(params.version || "en_kjv");
-    const [book, setBook] = createSignal<string>(params.book || "gn");
+
+    const [book, setBook] = createSignal<string>('');
     const [chapter, setChapter] = createSignal<number>(Number(params.chapter) || 1);
     const [verse, setVerse] = createSignal<number>(Number(params.verse) || 0);
 
     const [bookSize, setBookSize] = createSignal<number>(0);
-    const [loading, setLoading] = createSignal<boolean>(true);
 
-    // Transforma o número na abreviação
+    if (isNaN(Number(params.book))) {
+        setBook(params.book || "gn");
+    }
+
+    // Transformação do número para abreviação e verificação inicial
     createEffect(async () => {
-        setLoading(true);
         try {
-            const bookNumber = Number(book());
-            if (!isNaN(bookNumber)) {
+            if (book() === '') {
                 const books = await getAllBooks(version());
                 if (!("error" in books)) {
-                    setBook(books[bookNumber]?.abbrev || book());
+                    setBook(books[Number(params.book)]?.abbrev);
                 }
+            } else {
+                const size = await getBookSize(version(), book());
+                setBookSize(size);
+                if (!size) console.error("Failed to fetch book size.");
             }
-
-            const size = await getBookSize(version(), book());
-            setBookSize(size);
-            if (!size) console.error("Failed to fetch book size.");
         } catch (error) {
             console.error("Error:", error);
-        } finally {
-            setLoading(false);
         }
     });
 
-    // Atualiza a URL
+    // Atualiza a URL sempre que as dependências mudam
     createEffect(() => {
-        navigate(`${import.meta.env.BASE_URL}${version()}/${book()}/${chapter()}/${verse() || ''}`);
+        if (book() !== '')
+            navigate(`${import.meta.env.BASE_URL}${version()}/${book()}/${chapter()}/${verse() || ''}`);
     });
 
     function onchange(updatedBook?: string, updatedChapter?: number) {
-        if (updatedBook) setBook(updatedBook); 
-        if (updatedChapter) setChapter(updatedChapter);
-        else setChapter(1); // Reset chapter to 1 if a new book is selected
+        if (updatedBook && updatedBook !== book()) {
+            setBook(updatedBook); 
+            setChapter(1); // Reset chapter to 1 if a new book is selected
+        } else if (updatedChapter) {
+            setChapter(updatedChapter);
+        }
     }
 
     return (
-        <Show when={!loading()} fallback={<em style={{"color" : "gray"}}>Loading...</em>}>
+        <Show when={book() !== ''} fallback={<em style={{"color" : "gray"}}>Loading...</em>}>
             <Selector
                 version={version()}
                 book={book()}
                 bookSize={bookSize()}
                 chapter={chapter()}
                 verse={verse()}
-
                 onchange={onchange}
                 disabled={verse() !== 0}
             />
