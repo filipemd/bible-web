@@ -118,7 +118,7 @@ const Selector: Component<{ version: string; book: string; bookSize: number; cha
                     value={props.chapter}
                     onChange={(e) => {
                         const chapter = Number(e.currentTarget.value);
-                        if (!isNaN(chapter) && chapter >= 1 && chapter < props.bookSize) {
+                        if (!isNaN(chapter) && chapter >= 1 && chapter <= props.bookSize) {
                             props.onchange(undefined, chapter);
                         } else {
                             e.currentTarget.value = props.chapter.toString();
