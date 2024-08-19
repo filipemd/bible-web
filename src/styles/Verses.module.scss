@@ -1,0 +1,15 @@
+.verseNumber {
+    color: gray;
+    font-style: italic;
+    font-size: medium;
+    text-decoration: none;
+  
+    &:hover {
+      text-decoration: underline;
+    }
+}
+
+.marked {
+    background-color: greenyellow;
+    border-radius: 3px;
+}

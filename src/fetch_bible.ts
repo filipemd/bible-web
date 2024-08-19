@@ -20,11 +20,11 @@ interface BibleData {
 }
 
 // Cache para armazenar os dados da Bíblia e evitar múltiplas requisições
-const bibleCache: Record<string, BibleData[]> = {};
+const bibleCache = new Map<string, BibleData[]>();
 
 // Função para buscar os dados da Bíblia com cache
 async function fetchBibleData(version: string, bibleUrl: string): Promise<BibleData[] | BibleError> {
-    if (bibleCache[version]) return bibleCache[version];
+    if (bibleCache.has(version)) return bibleCache.get(version)!;
 
     const url = `${import.meta.env.BASE_URL}${bibleUrl}/${version}.json`;
 
@@ -33,13 +33,18 @@ async function fetchBibleData(version: string, bibleUrl: string): Promise<BibleD
         if (!response.ok) throw new Error(`Erro: ${response.status} ${response.statusText}`);
 
         const data: BibleData[] = await response.json();
-        bibleCache[version] = data; // Armazena os dados no cache
+        bibleCache.set(version, data); // Armazena os dados no cache
         return data;
     } catch (error) {
         console.error('Erro ao buscar dados da Bíblia:', error);
         console.log(url);
         return { error: error instanceof Error ? error.message : "Erro desconhecido ao buscar dados da Bíblia." };
     }
+}
+
+// Função para lidar com erros
+function handleApiError(error: BibleError) {
+    return error;
 }
 
 // Pega os versículos da Bíblia
@@ -50,23 +55,25 @@ export async function getBibleVerses(
     bibleUrl: string = "static/bible/json"
 ): Promise<BibleVerseResponse | BibleError> {
     if (!version || !book || chapter <= 0 || !Number.isInteger(chapter)) {
-        return { error: "Parâmetros inválidos. Verifique a versão, livro e capítulo." };
+        return handleApiError({ error: "Parâmetros inválidos. Verifique a versão, livro e capítulo." });
     }
-    
-    //console.log(version, book, chapter);
 
     const data = await fetchBibleData(version, bibleUrl);
-    if ('error' in data) return data;
+    if ('error' in data) return handleApiError(data);
 
     const bookData = data.find(b => b.abbrev === book);
-    if (!bookData) return { error: "Livro não encontrado." };
-    if (chapter > bookData.chapters.length) return { error: `Capítulo ${chapter} não encontrado.` };
+    if (!bookData) return handleApiError({ error: "Livro não encontrado." });
+    if (chapter > bookData.chapters.length) return handleApiError({ error: `Capítulo ${chapter} não encontrado.` });
 
     return { book: bookData.name, verses: bookData.chapters[chapter - 1] || [] };
 }
 
 // Função para pegar o tamanho (número de capítulos) de um livro
-export async function getBookSize(version: string, book: string, bibleUrl: string = "static/bible/json"): Promise<number> {
+export async function getBookSize(
+    version: string,
+    book: string,
+    bibleUrl: string = "static/bible/json"
+): Promise<number> {
     const data = await fetchBibleData(version, bibleUrl);
     if ('error' in data) return 0;
 
@@ -77,7 +84,10 @@ export async function getBookSize(version: string, book: string, bibleUrl: strin
 }
 
 // Função para pegar todos os livros de uma versão
-export async function getAllBooks(version: string, bibleUrl: string = "static/bible/json"): Promise<BibleBooksResponse[] | BibleError> {
+export async function getAllBooks(
+    version: string,
+    bibleUrl: string = "static/bible/json"
+): Promise<BibleBooksResponse[] | BibleError> {
     const data = await fetchBibleData(version, bibleUrl);
     if ('error' in data) return data;
 

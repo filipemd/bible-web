@@ -4,6 +4,7 @@ import { useParams, useNavigate, A } from '@solidjs/router';
 
 import type { BibleError, BibleBooksResponse } from "../../fetch_bible";
 import { getBookSize, getAllBooks } from '../../fetch_bible';
+import { saveLastChapterRead, getLastChapterRead } from '../../history';
 
 import Verses from './Verses';
 
@@ -81,10 +82,12 @@ const Bible: Component = () => {
     const params = useParams(); // Obtém parâmetros da URL
     const navigate = useNavigate(); // Função para navegação
 
+    const history = getLastChapterRead();
+
     // Sinais para version, book, chapter e verse
-    const [version] = createSignal<string>(params.version || "en_kjv");
-    const [book, setBook] = createSignal<string>(isNaN(Number(params.book)) ? params.book || "gn" : '');
-    const [chapter, setChapter] = createSignal<number>(Number(params.chapter) || 1);
+    const [version] = createSignal<string>(params.version || history.version || "en_kjv");
+    const [book, setBook] = createSignal<string>(isNaN(Number(params.book)) ? params.book || history.book ||"gn" : '');
+    const [chapter, setChapter] = createSignal<number>(Number(params.chapter) || history.chapter || 1);
     const [verse, setVerse] = createSignal<number>(Number(params.verse) || 0);
 
     const [bookSize, setBookSize] = createSignal<number>(0);
@@ -113,6 +116,7 @@ const Bible: Component = () => {
     createEffect(() => {
         if (book() !== '') {
             navigate(`${import.meta.env.BASE_URL}${version()}/${book()}/${chapter()}/${verse() || ''}`);
+            saveLastChapterRead(version(), book(), chapter());
         }
     }, [version, book, chapter, verse]);
 
