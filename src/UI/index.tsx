@@ -5,7 +5,7 @@ import { MetaProvider} from '@solidjs/meta';
 
 import '../styles/index.scss';
 
-const Bible = lazy(() => import("./Bible"));
+const Bible = lazy(() => import("./Bible/Bible"));
 const VersionSelector = lazy(() => import("./VersionSelector"));
 
 const root = document.getElementById('root');

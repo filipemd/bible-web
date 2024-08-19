@@ -52,6 +52,8 @@ export async function getBibleVerses(
     if (!version || !book || chapter <= 0 || !Number.isInteger(chapter)) {
         return { error: "Parâmetros inválidos. Verifique a versão, livro e capítulo." };
     }
+    
+    //console.log(version, book, chapter);
 
     const data = await fetchBibleData(version, bibleUrl);
     if ('error' in data) return data;
