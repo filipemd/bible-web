@@ -69,12 +69,6 @@ const Verses: Component<{ version: string; book: string; chapter: number; verse:
 // Componente para selecionar o livro e capítulo
 const Selector: Component<{ version: string; book: string; bookSize: number; chapter: number; verse: number; onchange: (book?: string, chapter?: number) => void; disabled?: boolean; }> = (props) => {
     const [books, setBooks] = createSignal<BibleBooksResponse[]>([]);
-
-    /* 
-    Índice do livro. Ex.: Gênesis = 0, Êxodo = 1, Levítico = 2, ...
-
-    Serve para uma URL ser compatível com várias línguas. Porque, por exemplo, em português, a abreviação de Salmos é "sl", enquanto em inglês é "ps".
-    */
     const [bookIndex, setBookIndex] = createSignal<number>(0);
 
     createEffect(() => {
@@ -82,14 +76,17 @@ const Selector: Component<{ version: string; book: string; bookSize: number; cha
             const fetchedBooks: BibleBooksResponse[] | BibleError = await getAllBooks(props.version);
             if (!("error" in fetchedBooks)) {
                 setBooks(fetchedBooks);
-                const index = fetchedBooks.findIndex(book => book.abbrev === props.book);
-                setBookIndex(index >= 0 ? index : 0);
             } else {
                 console.error("Error in getAllBooks():", fetchedBooks.error);
             }
         };
         fetchBooks();
-    });
+    }, [props.version]);
+
+    createEffect(() => {
+        const index = books().findIndex(book => book.abbrev === props.book);
+        setBookIndex(index >= 0 ? index : 0);
+    }, [props.book, books]);
 
     return (
         <div id={styles.selector}>
@@ -100,7 +97,6 @@ const Selector: Component<{ version: string; book: string; bookSize: number; cha
             <div id={styles.center}>
                 <select
                     name="book"
-                    value={props.book} 
                     onChange={(e) => {
                         const selectedBook = e.currentTarget.value;
                         props.onchange(selectedBook);
@@ -109,7 +105,7 @@ const Selector: Component<{ version: string; book: string; bookSize: number; cha
                 >
                     <For each={books()}>
                         {(book) => (
-                            <option value={book.abbrev} selected={props.book === book.abbrev}>
+                            <option value={book.abbrev} selected={book.abbrev === props.book}>
                                 {book.name}
                             </option>
                         )}
