@@ -3,8 +3,8 @@ import { createEffect, createSignal, createMemo, For, Show } from 'solid-js';
 import { Title } from '@solidjs/meta';
 import { useParams, useNavigate, A } from '@solidjs/router';
 
-import { getBibleVerses, getBookSize, getAllBooks } from '../fetch_bible';
 import type { BibleVerseResponse, BibleError, BibleBooksResponse } from "../fetch_bible";
+import { getBibleVerses, getBookSize, getAllBooks } from '../fetch_bible';
 
 import Copy from './Copy';
 
@@ -13,7 +13,7 @@ import styles from '../styles/Bible.module.scss';
 import logo from '../assets/icons/logo.svg';
 
 // Componente para exibir um verso específico
-const Verse: Component<{ number: number; text: string; url?: string; onClick?: (verse: number) => void; }> = (props) => {
+const Verse: Component<{ number: number; text: string; url?: string; onClick?: (verse: number) => void;}> = (props) => {
     const href = props.url ? `${props.url}${props.number}` : `#${props.number}`;
     return (
         <p>
@@ -27,7 +27,6 @@ const Verse: Component<{ number: number; text: string; url?: string; onClick?: (
 };
 
 // Componente para exibir os versos de um capítulo específico
-// Componente para exibir os versos de um capítulo específico
 const Verses: Component<{ version: string; book: string; chapter: number; verse: number; onVerseClick: (verse: number) => void; }> = (props) => {
     const [verses, setVerses] = createSignal<BibleVerseResponse>();
 
@@ -38,10 +37,11 @@ const Verses: Component<{ version: string; book: string; chapter: number; verse:
             if (!("error" in fetchedVerses)) {
                 setVerses(fetchedVerses);
             } else {
-                console.error("Erro em getBibleVerses():", fetchedVerses.error);
+                console.error(`Erro em getBibleVerses(${props.version}, ${props.book}, ${props.chapter}):`, fetchedVerses.error);
+                console.log(fetchedVerses);
             }
         })();
-    });
+    }, [props.version, props.book, props.chapter]);
 
     // Memoização do título para evitar recomputações desnecessárias
     const title = createMemo(() => `${verses()?.book} ${props.chapter}${props.verse ? `:${props.verse}` : ''} ${props.version.toUpperCase()}`);
@@ -57,7 +57,7 @@ const Verses: Component<{ version: string; book: string; chapter: number; verse:
                 <Show when={props.verse === 0}>
                     <For each={verses()!.verses} fallback={<p>Nenhum verso encontrado.</p>}>
                         {(text: string, index: () => number) => (
-                            <Verse number={index() + 1} text={text} url={`${import.meta.env.BASE_URL}${props.version}/${props.book}/${props.chapter}/`} onClick={props.onVerseClick}/>
+                            <Verse number={index() + 1} text={text} url={`${import.meta.env.BASE_URL}${props.version}/${props.book}/${props.chapter}/`} onClick={props.onVerseClick} />
                         )}
                     </For>
                 </Show>
@@ -101,8 +101,7 @@ const Selector: Component<{ version: string; book: string; bookSize: number; cha
                         const selectedBook = e.currentTarget.value;
                         props.onchange(selectedBook);
                     }}
-                    disabled={props.disabled}
-                >
+                    disabled={props.disabled}>
                     <For each={books()}>
                         {(book) => (
                             <option value={book.abbrev} selected={book.abbrev === props.book}>
@@ -119,7 +118,7 @@ const Selector: Component<{ version: string; book: string; bookSize: number; cha
                     value={props.chapter}
                     onChange={(e) => {
                         const chapter = Number(e.currentTarget.value);
-                        if (!isNaN(chapter) && chapter >= 1 && chapter <= props.bookSize) {
+                        if (!isNaN(chapter) && chapter >= 1 && chapter < props.bookSize) {
                             props.onchange(undefined, chapter);
                         } else {
                             e.currentTarget.value = props.chapter.toString();
@@ -134,56 +133,63 @@ const Selector: Component<{ version: string; book: string; bookSize: number; cha
 
 // Componente principal da Bíblia
 const Bible: Component = () => {
-    const params = useParams();
-    const navigate = useNavigate();
+    const params = useParams(); // Obtém parâmetros da URL
+    const navigate = useNavigate(); // Função para navegação
 
+    // Sinais para version, book, chapter e verse
     const [version] = createSignal<string>(params.version || "en_kjv");
-
-    const [book, setBook] = createSignal<string>('');
+    const [book, setBook] = createSignal<string>(isNaN(Number(params.book)) ? params.book || "gn" : '');
     const [chapter, setChapter] = createSignal<number>(Number(params.chapter) || 1);
     const [verse, setVerse] = createSignal<number>(Number(params.verse) || 0);
 
     const [bookSize, setBookSize] = createSignal<number>(0);
 
-    if (isNaN(Number(params.book))) {
-        setBook(params.book || "gn");
-    }
-
-    // Transformação do número para abreviação e verificação inicial
+    // Obtém detalhes do livro e seu tamanho
     createEffect(async () => {
         try {
             if (book() === '') {
+                // Se o livro estiver vazio, busca todos os livros e define o livro atual
                 const books = await getAllBooks(version());
                 if (!("error" in books)) {
                     setBook(books[Number(params.book)]?.abbrev);
                 }
             } else {
+                // Obtém o tamanho do livro atual
                 const size = await getBookSize(version(), book());
                 setBookSize(size);
-                if (!size) console.error("Failed to fetch book size.");
+                if (!size) console.error("Falha ao buscar o tamanho do livro.");
             }
         } catch (error) {
-            console.error("Error:", error);
+            console.error("Erro:", error);
         }
-    });
+    }, [version, book]);
 
-    // Atualiza a URL sempre que as dependências mudam
+    // Atualiza a URL sempre que a versão, o livro, o capítulo ou o verso mudam
     createEffect(() => {
-        if (book() !== '')
+        if (book() !== '') {
             navigate(`${import.meta.env.BASE_URL}${version()}/${book()}/${chapter()}/${verse() || ''}`);
-    }, [book, chapter, verse]);
+        }
+    }, [version, book, chapter, verse]);
 
+    // Manipula mudanças no livro e no capítulo
+    createEffect(() => {
+        if (book() !== '') {
+            setChapter(1); // Reseta o capítulo para 1 quando o livro muda
+        }
+    }, [book]);
+
+    // Função para lidar com mudanças no livro e no capítulo
     function onchange(updatedBook?: string, updatedChapter?: number) {
         if (updatedBook && updatedBook !== book()) {
-            setBook(updatedBook); 
-            setChapter(1); // Reset chapter to 1 if a new book is selected
-        } else if (updatedChapter) {
+            setBook(updatedBook);
+        }
+        if (updatedChapter) {
             setChapter(updatedChapter);
         }
     }
 
     return (
-        <Show when={book() !== ''} fallback={<em style={{"color" : "gray"}}>Loading...</em>}>
+        <Show when={book() !== ''} fallback={<em style={{ color: "gray" }}>Carregando...</em>}>
             <Selector
                 version={version()}
                 book={book()}
@@ -191,8 +197,7 @@ const Bible: Component = () => {
                 chapter={chapter()}
                 verse={verse()}
                 onchange={onchange}
-                disabled={verse() !== 0}
-            />
+                disabled={verse() !== 0} />
             <div id={styles.content}>
                 <main>
                     <article>
@@ -201,19 +206,19 @@ const Bible: Component = () => {
                             book={book()}
                             chapter={chapter()}
                             verse={verse()}
-                            onVerseClick={setVerse}
-                        />
+                            onVerseClick={setVerse} />
                     </article>
                 </main>
                 <Show
                     when={typeof bookSize() === 'number' && chapter() < bookSize() && verse() === 0}
-                    fallback={<button onClick={() => setVerse(0)}>Read full chapter.</button>}
+                    fallback={<button onClick={() => setVerse(0)}>Ler capítulo completo.</button>}
                 >
-                    <button onClick={() => setChapter(chapter() + 1)}>Next Chapter.</button>
+                    <button onClick={() => setChapter(chapter() + 1)}>Próximo Capítulo.</button>
                 </Show>
             </div>
         </Show>
     );
 };
+
 
 export default Bible;

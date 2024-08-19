@@ -58,7 +58,7 @@ export async function getBibleVerses(
 
     const bookData = data.find(b => b.abbrev === book);
     if (!bookData) return { error: "Livro não encontrado." };
-    if (chapter > bookData.chapters.length) return { error: "Capítulo não encontrado." };
+    if (chapter > bookData.chapters.length) return { error: `Capítulo ${chapter} não encontrado.` };
 
     return { book: bookData.name, verses: bookData.chapters[chapter - 1] || [] };
 }

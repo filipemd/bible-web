@@ -1,4 +1,5 @@
-import { Component, createResource } from 'solid-js';
+import type { Component } from 'solid-js';
+import { createResource } from 'solid-js';
 import { For } from 'solid-js';
 
 import { useParams, A } from '@solidjs/router';
@@ -6,24 +7,7 @@ import { Title } from '@solidjs/meta';
 
 import logo from '../assets/icons/logo.svg';
 
-interface Version {
-    name: string;
-    abbreviation: string;
-}
-
-interface Language {
-    language: string;
-    versions: Version[];
-}
-
-let versions: Promise<Language[]>;
-async function versions_index(): Promise<Language[]> {
-    if (!versions) {
-        const response = await fetch(`${import.meta.env.BASE_URL}static/bible/json/index.json`);
-        versions = response.json();
-    }
-    return versions;
-}
+import versions_index from '../versions_index'
 
 const VersionSelector: Component = () => {
     const params = useParams();
