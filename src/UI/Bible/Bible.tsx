@@ -134,7 +134,7 @@ const Bible: Component = () => {
     }
 
     return (
-        <Show when={book() !== ''} fallback={<em style={{ color: "gray" }}>Carregando...</em>}>
+        <Show when={book() !== ''} fallback={<em style={{ color: "gray" }}>Loading...</em>}>
             <Selector
                 version={version()}
                 book={book()}
@@ -156,8 +156,7 @@ const Bible: Component = () => {
                 </main>
                 <Show
                     when={typeof bookSize() === 'number' && chapter() < bookSize() && verse() === 0}
-                    fallback={<button onClick={() => setVerse(0)}>Full chapter.</button>}
-                >
+                    fallback={<button onClick={() => setVerse(0)}>Full chapter.</button>}>
                     <button onClick={() => setChapter(chapter() + 1)}>Next chapter.</button>
                 </Show>
             </div>
