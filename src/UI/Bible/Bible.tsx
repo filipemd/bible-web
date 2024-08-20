@@ -155,9 +155,11 @@ const Bible: Component = () => {
                     </article>
                 </main>
                 <Show
-                    when={typeof bookSize() === 'number' && chapter() < bookSize() && verse() === 0}
-                    fallback={<button onClick={() => setVerse(0)}>Full chapter.</button>}>
+                    when={chapter() < bookSize() && verse() === 0}>
                     <button onClick={() => setChapter(chapter() + 1)}>Next chapter.</button>
+                </Show>
+                <Show when={verse() !== 0}>
+                    <button onClick={() => setVerse(0)}>Full chapter.</button>
                 </Show>
             </div>
         </Show>
