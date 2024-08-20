@@ -58,11 +58,10 @@ const Selector: Component<{ version: string; book: string; bookSize: number; cha
                 <select
                     name="book"
                     onChange={(e) => props.onchange(e.currentTarget.value)}
-                    disabled={props.disabled}
-                    value={props.book}>
+                    disabled={props.disabled}>
                     <For each={books()}>
                         {(book) => (
-                            <option value={book.abbrev}>
+                            <option value={book.abbrev} selected={book.abbrev === props.book}>
                                 {book.name}
                             </option>
                         )}
