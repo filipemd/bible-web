@@ -6,13 +6,3 @@ body {
 button, select, p {
   font-size: large;
 }
-
-.hidden {
-  transition: transform 0.2s ease-in-out;
-  transform: translateY(-100%);
-}
-
-.shown {
-  transition: transform 0.2s ease-in-out;
-  transform: translateY(0);
-}
