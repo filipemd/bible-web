@@ -19,7 +19,7 @@ const Bible: Component = () => {
 
     // Sinais para version, book, chapter e verse
     const [version] = createSignal<string>(params.version || history.version || "en_kjv");
-    const [book, setBook] = createSignal<string>(isNaN(Number(params.book)) ? params.book || history.book ||"gn" : '');
+    const [book, setBook] = createSignal<string>(isNaN(Number(params.book)) ? params.book || history.book || "gn" : '');
     const [chapter, setChapter] = createSignal<number>(Number(params.chapter) || history.chapter || 1);
     const [verse, setVerse] = createSignal<number>(Number(params.verse) || 0);
 

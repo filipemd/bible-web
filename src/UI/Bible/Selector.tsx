@@ -50,7 +50,7 @@ const Selector: Component<{ version: string; book: string; bookSize: number; cha
         <div id={styles.selector} class={hidden() ? styles.hidden : styles.shown}>
             <div id={styles.version}>
                 <img src={logo} width="50px" alt="Bible Logo" /><br />
-                <A href={`${import.meta.env.BASE_URL}${props.version}/${bookIndex()}/${props.chapter}/${props.verse || ''}select_version`}>
+                <A href={`${import.meta.env.BASE_URL}${props.version}/${bookIndex()}/${props.chapter}/${props.verse + '/' || ''}select_version`}>
                     Change version.
                 </A>
             </div>
