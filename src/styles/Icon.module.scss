@@ -4,6 +4,12 @@
   transition: transform 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
 
   margin-left: 5px;
+
+  // Deixa o texto não selecionável
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
   
   &:hover {
     transform: scale(1.1);
